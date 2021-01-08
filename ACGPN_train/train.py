@@ -18,29 +18,31 @@ import ipdb
 writer = SummaryWriter('runs/uniform_all')
 SIZE=320
 NC=14
+HEIGHT, WIDTH = 256, 192
+
 def generate_label_plain(inputs):
     size = inputs.size()
     pred_batch = []
     for input in inputs:
-        input = input.view(1, NC, 256,192)
+        input = input.view(1, NC, HEIGHT, WIDTH)
         pred = np.squeeze(input.data.max(1)[1].cpu().numpy(), axis=0)
         pred_batch.append(pred)
 
     pred_batch = np.array(pred_batch)
     pred_batch = torch.from_numpy(pred_batch)
-    label_batch = pred_batch.view(size[0], 1, 256,192)
+    label_batch = pred_batch.view(size[0], 1, HEIGHT, WIDTH)
 
     return label_batch
 def morpho(mask,iter):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     new=[]
     for i in range(len(mask)):
-        tem=mask[i].squeeze().reshape(256,192,1)*255
+        tem=mask[i].squeeze().reshape(HEIGHT, WIDTH, 1) * 255
         tem=tem.astype(np.uint8)
         tem=cv2.dilate(tem,kernel,iterations=iter)
         tem=tem.astype(np.float64)
-        tem=tem.reshape(1,256,192)
-        new.append(tem.astype(np.float64)/255.0)
+        tem=tem.reshape(1, HEIGHT, WIDTH)
+        new.append(tem.astype(np.float64) / 255.0)
     new=np.stack(new)
     return new
 def generate_label_color(inputs):

@@ -1,0 +1,3 @@
+train_data/*
+/ACGPN_train/models/vgg19-dcbb9e9d.pth
+!.gitkeep
