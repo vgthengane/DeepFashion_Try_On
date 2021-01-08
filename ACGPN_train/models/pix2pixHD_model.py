@@ -12,11 +12,13 @@ from .base_model import BaseModel
 from . import networks
 import torch.nn.functional as F
 import ipdb
+from data.input_size import HEIGHT, WIDTH
 
 NC=20
 def generate_discrete_label(inputs, label_nc,onehot=True,encode=True):
     pred_batch = []
     size = inputs.size()
+    # print(f"size from pix2pixHD: ", size)
     for input in inputs:
         input = input.view(1, label_nc, size[2], size[3])
         pred = np.squeeze(input.data.max(1)[1].cpu().numpy(), axis=0)
@@ -25,7 +27,7 @@ def generate_discrete_label(inputs, label_nc,onehot=True,encode=True):
     pred_batch = torch.from_numpy(pred_batch)
     label_map = []
     for p in pred_batch:
-        p = p.view(1, 256, 192)
+        p = p.view(1, HEIGHT, WIDTH)
         label_map.append(p)
     label_map = torch.stack(label_map, 0)
     if not onehot:
@@ -120,7 +122,7 @@ class Pix2PixHDModel(BaseModel):
             self.D1=self.get_D(34+14+3,opt)
             self.D2=self.get_D(20+18,opt)
             self.D=self.get_D(27,opt)
-            self. D3=self.get_D(7,opt)
+            self.D3=self.get_D(7,opt)
             #self.netB = networks.define_B(netB_input_nc, opt.output_nc, 32, 3, 3, opt.norm, gpu_ids=self.gpu_ids)        
             
         if self.opt.verbose:
@@ -399,8 +401,8 @@ class Pix2PixHDModel(BaseModel):
 
     def save(self, which_epoch):
         self.save_network(self.Unet, 'U', which_epoch, self.gpu_ids)
-        self.save_network(self.G,'G',which_epoch, self.gpu_ids)
-        self.save_network(self.G1,'G1',which_epoch, self.gpu_ids)
+        self.save_network(self.G, 'G', which_epoch, self.gpu_ids)
+        self.save_network(self.G1,'G1', which_epoch, self.gpu_ids)
         self.save_network(self.G2, 'G2', which_epoch, self.gpu_ids)
         self.save_network(self.D, 'D', which_epoch, self.gpu_ids)
         self.save_network(self.D1, 'D1', which_epoch, self.gpu_ids)

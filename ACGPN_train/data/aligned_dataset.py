@@ -10,6 +10,7 @@ import numpy as np
 import os.path as osp
 from PIL import ImageDraw
 import ipdb
+from data.input_size import HEIGHT, WIDTH
 
 class AlignedDataset(BaseDataset):
     def initialize(self, opt):
@@ -23,8 +24,8 @@ class AlignedDataset(BaseDataset):
             self.A_paths = sorted(make_dataset(self.dir_A))
             self.AR_paths = make_dataset(self.dir_A)
 
-        self.fine_height=256
-        self.fine_width=192
+        self.fine_height=HEIGHT
+        self.fine_width=WIDTH
         self.radius=5
         ### input A test (label maps)
         if not (opt.isTrain or opt.use_encoded_image):

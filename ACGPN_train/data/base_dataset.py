@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 import numpy as np
 import random
 import ipdb
+from data.input_size import HEIGHT, WIDTH
 
 class BaseDataset(data.Dataset):
     def __init__(self):
@@ -41,7 +42,7 @@ def get_transform(opt, params, method=Image.BICUBIC, normalize=True):
         transform_list.append(transforms.Scale(osize, method))   
     elif 'scale_width' in opt.resize_or_crop:
         transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.loadSize, method)))
-        osize = [256,192]
+        osize = [HEIGHT,WIDTH]
         transform_list.append(transforms.Scale(osize, method))  
     if 'crop' in opt.resize_or_crop:
         transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.fineSize)))
