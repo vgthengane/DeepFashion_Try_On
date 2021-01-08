@@ -1,6 +1,7 @@
 import os
 import torch
 import sys
+from data.input_size import HEIGHT, WIDTH
 
 class BaseModel(torch.nn.Module):
     def name(self):

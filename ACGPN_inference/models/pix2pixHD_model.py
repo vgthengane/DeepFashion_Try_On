@@ -9,6 +9,7 @@ import cv2
 from .base_model import BaseModel
 from . import networks
 import torch.nn.functional as F
+from data.input_size import HEIGHT, WIDTH
 
 NC = 20
 
@@ -25,7 +26,7 @@ def generate_discrete_label(inputs, label_nc, onehot=True, encode=True):
     pred_batch = torch.from_numpy(pred_batch)
     label_map = []
     for p in pred_batch:
-        p = p.view(1, 256, 192)
+        p = p.view(1, HEIGHT, WIDTH)
         label_map.append(p)
     label_map = torch.stack(label_map, 0)
     if not onehot:
@@ -40,14 +41,14 @@ def morpho(mask,iter,bigger=True):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     new=[]
     for i in range(len(mask)):
-        tem=mask[i].cpu().detach().numpy().squeeze().reshape(256,192,1)*255
+        tem=mask[i].cpu().detach().numpy().squeeze().reshape(HEIGHT,WIDTH,1)*255
         tem=tem.astype(np.uint8)
         if bigger:
             tem=cv2.dilate(tem,kernel,iterations=iter)
         else:
             tem=cv2.erode(tem,kernel,iterations=iter)
         tem=tem.astype(np.float64)
-        tem=tem.reshape(1,256,192)
+        tem=tem.reshape(1,HEIGHT,WIDTH)
         new.append(tem.astype(np.float64)/255.0)
     new=np.stack(new)
     new=torch.FloatTensor(new).cuda()
@@ -57,14 +58,14 @@ def morpho_smaller(mask,iter,bigger=True):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 1))
     new=[]
     for i in range(len(mask)):
-        tem=mask[i].cpu().detach().numpy().squeeze().reshape(256,192,1)*255
+        tem=mask[i].cpu().detach().numpy().squeeze().reshape(HEIGHT,WIDTH,1)*255
         tem=tem.astype(np.uint8)
         if bigger:
             tem=cv2.dilate(tem,kernel,iterations=iter)
         else:
             tem=cv2.erode(tem,kernel,iterations=iter)
         tem=tem.astype(np.float64)
-        tem=tem.reshape(1,256,192)
+        tem=tem.reshape(1,HEIGHT,WIDTH)
         new.append(tem.astype(np.float64)/255.0)
     new=np.stack(new)
     new=torch.FloatTensor(new).cuda()

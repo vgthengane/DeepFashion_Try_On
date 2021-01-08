@@ -22,7 +22,6 @@ NC=14
 
 def generate_label_plain(inputs):
     size = inputs.size()
-    print(size)
     pred_batch = []
     for input in inputs:
         input = input.view(1, NC, HEIGHT, WIDTH)
@@ -136,26 +135,14 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         ##add gaussian noise channel && wash the label
         t_mask=torch.FloatTensor((data['label'].cpu().numpy()==7).astype(np.float))
-        data['label'] = data['label'] * (1 - t_mask) + t_mask*4
+        data['label']=data['label']*(1-t_mask)+t_mask*4
         mask_clothes=torch.FloatTensor((data['label'].cpu().numpy()==4).astype(np.int))
         mask_fore=torch.FloatTensor((data['label'].cpu().numpy()>0).astype(np.int))
-        img_fore=data['image'] * mask_fore
+        img_fore=data['image']*mask_fore
         img_fore_wc=img_fore*mask_fore
         all_clothes_label=changearm(data['label'])
         ############## Forward Pass ######################
-        losses, fake_image, real_image, input_label, \
-            L1_loss, style_loss, clothes_mask, warped, \
-            refined, CE_loss, rx, ry, cx, cy, rg, cg = model(
-                                                        Variable(data['label'].cuda()), 
-                                                        Variable(data['edge'].cuda()), 
-                                                        Variable(img_fore.cuda()), 
-                                                        Variable(mask_clothes.cuda()), 
-                                                        Variable(data['color'].cuda()), 
-                                                        Variable(all_clothes_label.cuda()), 
-                                                        Variable(data['image'].cuda()), 
-                                                        Variable(data['pose'].cuda()), 
-                                                        Variable(data['mask'].cuda())
-                                                    )
+        losses, fake_image, real_image,input_label,L1_loss,style_loss,clothes_mask,warped,refined,CE_loss,rx,ry,cx,cy,rg,cg= model(Variable(data['label'].cuda()),Variable(data['edge'].cuda()),Variable(img_fore.cuda()),Variable(mask_clothes.cuda()),Variable(data['color'].cuda()),Variable(all_clothes_label.cuda()),Variable(data['image'].cuda()),Variable(data['pose'].cuda()),Variable(data['mask'].cuda())  )
 
         # sum per device losses
         losses = [ torch.mean(x) if not isinstance(x, int) else x for x in losses ]
@@ -163,8 +150,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         # calculate final loss scalar
         loss_D = (loss_dict['D_fake'] + loss_dict['D_real']) * 0.5
-        loss_G = loss_dict['G_GAN']+loss_dict.get('G_GAN_Feat',0)+loss_dict.get('G_VGG',0) + \
-                                                            torch.mean(L1_loss+CE_loss+rx+ry+cx+cy+rg+cg)
+        loss_G = loss_dict['G_GAN']+loss_dict.get('G_GAN_Feat',0)+loss_dict.get('G_VGG',0)+torch.mean(L1_loss+CE_loss+rx+ry+cx+cy+rg+cg)
 
         writer.add_scalar('loss_d', loss_D, step)
         writer.add_scalar('loss_g', loss_G, step)

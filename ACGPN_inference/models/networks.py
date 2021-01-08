@@ -14,6 +14,7 @@ import torch.nn.functional as F
 from grid_sample import grid_sample
 from torch.autograd import Variable
 from tps_grid_gen import TPSGridGen
+from data.input_size import HEIGHT, WIDTH
 
 
 ###############################################################################
@@ -467,14 +468,17 @@ class UnetMask(nn.Module):
         self.conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU(),
                                      nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU()])
         self.pool1 = nn.MaxPool2d(kernel_size=(2, 2))
+        pool1_shape = (HEIGHT//2, WIDTH//2)
 
         self.conv2 = nn.Sequential(*[nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU(),
                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU()])
         self.pool2 = nn.MaxPool2d(kernel_size=(2, 2))
+        pool2_shape = (HEIGHT//4, WIDTH//4)
 
         self.conv3 = nn.Sequential(*[nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU(),
                                      nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU()])
         self.pool3 = nn.MaxPool2d(kernel_size=(2, 2))
+        pool3_shape = (HEIGHT//8, WIDTH//8)
 
         self.conv4 = nn.Sequential(*[nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU(),
                                      nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU()])
@@ -486,26 +490,26 @@ class UnetMask(nn.Module):
         self.drop5 = nn.Dropout(0.5)
 
         self.up6 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512),
+            *[nn.UpsamplingNearest2d(size=pool3_shape), nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512),
               nn.ReLU()])
 
         self.conv6 = nn.Sequential(*[nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU(),
                                      nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU()])
         self.up7 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), nl(256),
+            *[nn.UpsamplingNearest2d(size=pool2_shape), nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), nl(256),
               nn.ReLU()])
         self.conv7 = nn.Sequential(*[nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU(),
                                      nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU()])
 
         self.up8 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), nl(128),
+            *[nn.UpsamplingNearest2d(size=pool1_shape), nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), nl(128),
               nn.ReLU()])
 
         self.conv8 = nn.Sequential(*[nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU(),
                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU()])
 
         self.up9 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), nl(64),
+            *[nn.UpsamplingNearest2d((HEIGHT, WIDTH)), nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), nl(64),
               nn.ReLU()])
 
         self.conv9 = nn.Sequential(*[nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU(),
@@ -674,14 +678,17 @@ class Refine(nn.Module):
         self.conv1 = nn.Sequential(*[nn.Conv2d(input_nc, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU(),
                                      nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU()])
         self.pool1 = nn.MaxPool2d(kernel_size=(2, 2))
+        pool1_shape = (HEIGHT//2, WIDTH//2)
 
         self.conv2 = nn.Sequential(*[nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU(),
                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU()])
         self.pool2 = nn.MaxPool2d(kernel_size=(2, 2))
+        pool2_shape = (pool1_shape[0]//2, pool1_shape[1]//2)
 
         self.conv3 = nn.Sequential(*[nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU(),
                                      nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU()])
         self.pool3 = nn.MaxPool2d(kernel_size=(2, 2))
+        pool3_shape = (pool2_shape[0]//2, pool2_shape[1]//2)
 
         self.conv4 = nn.Sequential(*[nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU(),
                                      nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU()])
@@ -693,26 +700,26 @@ class Refine(nn.Module):
         self.drop5 = nn.Dropout(0.5)
 
         self.up6 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512),
+            *[nn.UpsamplingNearest2d(size=pool3_shape), nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512),
               nn.ReLU()])
 
         self.conv6 = nn.Sequential(*[nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU(),
                                      nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1), nl(512), nn.ReLU()])
         self.up7 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), nl(256),
+            *[nn.UpsamplingNearest2d(size=pool2_shape), nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), nl(256),
               nn.ReLU()])
         self.conv7 = nn.Sequential(*[nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU(),
                                      nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1), nl(256), nn.ReLU()])
 
         self.up8 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), nl(128),
+            *[nn.UpsamplingNearest2d(size=pool1_shape), nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), nl(128),
               nn.ReLU()])
 
         self.conv8 = nn.Sequential(*[nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU(),
                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1), nl(128), nn.ReLU()])
 
         self.up9 = nn.Sequential(
-            *[nn.UpsamplingNearest2d(scale_factor=2), nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), nl(64),
+            *[nn.UpsamplingNearest2d(size=(HEIGHT, WIDTH)), nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), nl(64),
               nn.ReLU()])
 
         self.conv9 = nn.Sequential(*[nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), nl(64), nn.ReLU(),
@@ -1471,7 +1478,8 @@ class CNN(nn.Module):
         model += [nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1), norm_layer(64), nn.ReLU(True)]
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.model = nn.Sequential(*model)
-        self.fc1 = nn.Linear(512, 128)
+        units = 256 * (HEIGHT // 128) * (WIDTH // 128)
+        self.fc1 = nn.Linear(units, 128)
         self.fc2 = nn.Linear(128, num_output)
 
     def forward(self, x):
@@ -1605,7 +1613,7 @@ class STNNet(nn.Module):
         }['bounded_stn']
         self.loc_net = GridLocNet(grid_size_h, grid_size_w, target_control_points)
 
-        self.tps = TPSGridGen(256, 192, target_control_points)
+        self.tps = TPSGridGen(HEIGHT, WIDTH, target_control_points)
 
     def get_row(self, coor, num):
         for j in range(num):
@@ -1647,7 +1655,7 @@ class STNNet(nn.Module):
         source_control_points=(source_control_points)
         # print('control points',source_control_points.shape)
         source_coordinate = self.tps(source_control_points)
-        grid = source_coordinate.view(batch_size, 256, 192, 2)
+        grid = source_coordinate.view(batch_size, HEIGHT, WIDTH, 2)
         # print('grid size',grid.shape)
         transformed_x = grid_sample(x, grid, canvas=0)
         warped_mask = grid_sample(mask, grid, canvas=0)
