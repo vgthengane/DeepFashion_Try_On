@@ -13,6 +13,6 @@ def create_model(opt):
         print("model [%s] was created" % (model.name()))
 
     if opt.isTrain and len(opt.gpu_ids):
-        model = torch.nn.DataParallel(model, device_ids=opt.gpu_ids)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=opt.gpu_ids)
 
     return model
